@@ -368,7 +368,7 @@ def getmenu(request):
 
 def student(request):
     # страница студента
-    if request.session['user_type'] == 'student':
+    if 'user_type' in request.session and request.session['user_type'] == 'student':
         menu, user, current_avatar, phone, phone_error = studentaction(
             'mainpage', request)
         return render(request, 'studenttesting/mainpage.html', {
@@ -386,7 +386,7 @@ def student(request):
 
 def teacher(request):
     # страница преподавателя
-    if request.session['user_type'] == 'teacher':
+    if 'user_type' in request.session and request.session['user_type'] == 'teacher':
         menu, user = teacheraction('mainpage', request)
         return render(request, 'studenttesting/mainpage.html', {
             'menu': menu,
@@ -402,7 +402,7 @@ def tests(request):
     # список тестов
     if 'user_type' in request.session and request.session['user']:
         # интерфейс для студента
-        if request.session['user_type'] == 'student':
+        if 'user_type' in request.session and request.session['user_type'] == 'student':
             menu, user, tests, test_results = studentaction("tests", request)
             return render(request, 'studenttesting/tests.html', {
                 'menu': menu,
@@ -412,7 +412,7 @@ def tests(request):
                 'results': test_results,
             })
         # интерфейс для преподавателя
-        elif request.session['user_type'] == 'teacher':
+        elif 'user_type' in request.session and request.session['user_type'] == 'teacher':
             pass
     return HttpResponseRedirect(reverse("studenttesting:index"))
 
@@ -421,7 +421,7 @@ def history(request):
     # история тестов
     if 'user_type' in request.session and request.session['user']:
         # интерфейс для студента
-        if request.session['user_type'] == 'student':
+        if 'user_type' in request.session and request.session['user_type'] == 'student':
             menu, user, results_dict = studentaction("history", request)
             return render(request, 'studenttesting/history.html', {
                 'menu': menu,
@@ -430,7 +430,7 @@ def history(request):
                 'results': results_dict,
             })
         # интерфейс для преподавателя
-        elif request.session['user_type'] == 'teacher':
+        elif 'user_type' in request.session and request.session['user_type'] == 'teacher':
             pass
     return HttpResponseRedirect(reverse("studenttesting:index"))
 
@@ -439,7 +439,7 @@ def feedback(request):
     # обратная связь с преподавателем
     if 'user_type' in request.session and request.session['user']:
         # интерфейс для студента
-        if request.session['user_type'] == 'student':
+        if 'user_type' in request.session and request.session['user_type'] == 'student':
             menu, user, teachers, message_status = studentaction(
                 "feedback", request)
             return render(request, 'studenttesting/feedback.html', {
@@ -451,7 +451,7 @@ def feedback(request):
             })
 
         # интерфейс для преподавателя
-        elif request.session['user_type'] == 'teacher':
+        elif 'user_type' in request.session and request.session['user_type'] == 'teacher':
             pass
     return HttpResponseRedirect(reverse("studenttesting:index"))
 
@@ -472,7 +472,7 @@ def test(request, IDtest):
     # формирование страницы теста
     if 'user_type' in request.session and request.session['user']:
         # интерфейс для студента
-        if request.session['user_type'] == 'student':
+        if 'user_type' in request.session and request.session['user_type'] == 'student':
             menu, user, test, questions_count, test_dict = studentaction(
                 "test", request, IDtest)
 
@@ -486,7 +486,7 @@ def test(request, IDtest):
                 'path': request.path,
             })
         # интерфейс для преподавателя
-        elif request.session['user_type'] == 'teacher':
+        elif 'user_type' in request.session and request.session['user_type'] == 'teacher':
             pass
     return HttpResponseRedirect(reverse("studenttesting:index"))
 
@@ -495,7 +495,7 @@ def results(request, IDtest):
     # результаты теста
     if 'user_type' in request.session and request.session['user']:
         # интерфейс для студента
-        if request.session['user_type'] == 'student':
+        if 'user_type' in request.session and request.session['user_type'] == 'student':
             menu, user, test, positive, negative, raiting, test_dict, questions_count, results_dict = studentaction(
                 "results", request, IDtest)
             return render(request, 'studenttesting/results.html', {
@@ -511,14 +511,14 @@ def results(request, IDtest):
                 'results_dict': results_dict,
             })
         # интерфейс для преподавателя
-        elif request.session['user_type'] == 'teacher':
+        elif 'user_type' in request.session and request.session['user_type'] == 'teacher':
             pass
     return HttpResponseRedirect(reverse("studenttesting:index"))
 
 
 def reports(request):
     # страница преподавателя
-    if request.session['user_type'] == 'teacher':
+    if 'user_type' in request.session and request.session['user_type'] == 'teacher':
         menu, user, current_date, message_status = teacheraction(
             'reports', request)
         return render(request, 'studenttesting/reports.html', {
@@ -535,7 +535,7 @@ def reports(request):
 
 def students(request):
     # страница преподавателя
-    if request.session['user_type'] == 'teacher':
+    if 'user_type' in request.session and request.session['user_type'] == 'teacher':
         menu, user, results_dict = teacheraction('students', request)
         return render(request, 'studenttesting/students.html', {
             'menu': menu,
@@ -550,7 +550,7 @@ def students(request):
 
 def detail(request, IDs):
     # страница преподавателя
-    if request.session['user_type'] == 'teacher':
+    if 'user_type' in request.session and request.session['user_type'] == 'teacher':
         menu, user = teacheraction('mainpage', request)
         return render(request, 'studenttesting/detail.html', {
             'menu': menu,
