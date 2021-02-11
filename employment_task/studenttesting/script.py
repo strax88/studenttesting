@@ -9,6 +9,8 @@ import time
 
 @background(schedule=3)
 def notify_administrator(timer=24*60*60):
+    print("\nСледующая отправка: %s\n" % (timezone.localtime(
+        timezone.now())+datetime.timedelta(seconds=timer)))
     current_date = timezone.localtime(timezone.now()).strftime("%Y-%m-%d")
     year = current_date.split("-")[0]
     month = current_date.split("-")[1]
@@ -39,14 +41,13 @@ def notify_administrator(timer=24*60*60):
         if not test in temp_dict.keys():
             message_data += "Тест '{0}' сегодня никто не проходил.\n".format(
                 test.name)
-
+    message_data += "\nСледующая отправка: %s\n" % (timezone.localtime(
+        timezone.now())+datetime.timedelta(seconds=timer))
     try:
         send_mail(f'{theme} от {email_from}', message_data,
                   email_from, email_for)
     except BadHeaderError as e:
         print(e)
-    print("\nСледующая отправка: %s\n" % (timezone.localtime(
-        timezone.now())+datetime.timedelta(seconds=timer)))
     time.sleep(timer)
 
 
