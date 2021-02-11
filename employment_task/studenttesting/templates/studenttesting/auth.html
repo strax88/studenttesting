@@ -6,14 +6,20 @@
 
 {% block content %}
 
-
 <h1>Добро пожаловать в систему проверки знаний</h1>
 <label><font color="red">{{ user_exist }}</font></label>
 
 <form method="POST">
 	{% csrf_token %}
-	<input type="text" name="email" size="50" placeholder="name@example.com" value="{{ email }}" /><label><font color="red">{{ error_email }}</font></label><br /> 
-	<input type="password" name="password" size="50" placeholder="Пароль" value="{{ password }}" /><label><font color="red">{{ error_password }}</font></label><br /> 
+	<input type="text" name="email" size="50" placeholder="name@example.com" value="{{ email }}" />
+	<label>
+		<font color="red">{{ error_email }}</font>
+	</label><br /> 
+	<input type="password" name="password" size="50" placeholder="Пароль" value="{{ password }}" />
+	<label>
+		<font color="red">{{ error_password }}</font>
+	</label><br /> 
 	<input type="submit" value="Войти">
 </form>
+
 {% endblock %}

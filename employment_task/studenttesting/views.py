@@ -21,19 +21,25 @@ def studentaction(task, request, *args):
         # назначение телефона по умолчанию
         phone_error = ''
         # изменение аватарки при наличии информации о файле в базе данных
-        if user.avatar and len(user.avatar) > 0 :
+        if user.avatar and len(user.avatar) > 0:
             current_avatar = user.avatar
         # загрузка аватарки в медиа-каталог
         if request.method == 'POST' and 'avatar' in request.FILES:
             avatar = request.FILES['avatar']
             fs = FileSystemStorage()
-            filename = fs.save('.'.join(avatar.name.split('.')[:-1]) + "_student_" + str(IDs) + "." + avatar.name.split('.')[-1], avatar)
+            filename = fs.save(
+                '.'.join(avatar.name.split('.')[:-1])
+                + "_student_" + str(IDs)
+                + "." + avatar.name.split('.')[-1],
+                avatar
+            )
             uploaded_file_url = fs.url(filename)
             uploaded_file = str(settings.BASE_DIR) + uploaded_file_url
             user.avatar = uploaded_file_url
             user.save()
             current_avatar = user.avatar
-        # проверка на наличие файла аватарки, если отсутствует - применяется аватарка по умолчанию
+        # проверка на наличие файла аватарки, если отсутствует
+        # применяется аватарка по умолчанию
         if not os.path.exists(str(settings.BASE_DIR) + current_avatar):
             current_avatar = settings.STATIC_URL + 'studenttesting/default_avatar.png'
         # проверка ввода телефонного номера, не менее 5 символов
@@ -84,10 +90,14 @@ def studentaction(task, request, *args):
                             results_dict[elem]['negative'] += 1
 
                 results_dict[elem]['date'] = test_date
-                results_dict[elem]['negative'] += (len(Question.objects.filter(test=elem)) - question_count)
+                results_dict[elem]['negative'] += (
+                    len(Question.objects.filter(test=elem)) - question_count)
 
-
-                results_dict[elem]['raiting'] = round(results_dict[elem]['positive']/len(Question.objects.filter(test=elem)), 2)
+                results_dict[elem]['raiting'] = round(
+                    results_dict[elem]['positive'] /
+                    len(Question.objects.filter(test=elem)),
+                    2
+                )
         return menu, user, results_dict
     elif task == 'feedback':
         message_status = ""
@@ -100,7 +110,7 @@ def studentaction(task, request, *args):
             message_data = request.POST['data']
             try:
                 send_mail(f'{theme} от {email_from}', message_data,
-                      email_from, email_for)
+                          email_from, email_for)
             except BadHeaderError:
                 message_status = 'Сообщение не отправлено'
             message_status = 'Сообщение отправлено'
@@ -135,10 +145,14 @@ def studentaction(task, request, *args):
             for q in questions:
                 for elem in request.POST:
                     if 'question_' + str(q.id) in elem:
-                        answers[q.id] = int(request.POST[elem].split('answer_')[-1])
+                        answers[q.id] = int(
+                            request.POST[elem].split('answer_')[-1])
             # если не было ответов, перенаправление на тест
             if len(answers) == 0:
-                return HttpResponseRedirect(reverse("studenttesting:test", args=(IDtest,)))
+                return HttpResponseRedirect(reverse("studenttesting:test",
+                                                    args=(IDtest,)
+                                                    )
+                                            )
             # добавление информации в базу данных
             for q_id, a_id in answers.items():
                 newResult = Result(
@@ -178,6 +192,7 @@ def studentaction(task, request, *args):
     elif task == '':
         return menu, user
 
+
 def teacheraction(task, request, *args):
     IDt = request.session['user']
     menu = getmenu(request)
@@ -195,7 +210,8 @@ def teacheraction(task, request, *args):
                     if 'student_' + str(student.id) == post_record:
                         for test in tests:
                             if 'test_' + str(test.id) in post_data[post_record]:
-                                Result.objects.filter(student=student, test=test).delete()
+                                Result.objects.filter(
+                                    student=student, test=test).delete()
         for student in students:
             results_dict[student] = dict()
             positive = 0
@@ -221,10 +237,13 @@ def teacheraction(task, request, *args):
                                 results_dict[student][elem]['negative'] += 1
 
                     results_dict[student][elem]['date'] = test_date
-                    results_dict[student][elem]['negative'] += (len(Question.objects.filter(test=elem)) - question_count)
-                    results_dict[student][elem]['raiting'] = round(results_dict[student][elem]['positive']/len(Question.objects.filter(test=elem)), 2)
-        
-            
+                    results_dict[student][elem]['negative'] += (
+                        len(Question.objects.filter(test=elem)) - question_count)
+                    results_dict[student][elem]['raiting'] = round(
+                        results_dict[student][elem]['positive']/len(Question.objects.filter(test=elem)),
+                        2
+                        )
+
         return menu, user, results_dict
     elif task == 'reports':
         current_date = timezone.localtime(timezone.now()).strftime("%Y-%m")
@@ -234,10 +253,12 @@ def teacheraction(task, request, *args):
             date = post_data['calendar'][0]
             year = date.split("-")[0]
             month = date.split("-")[1]
-            results = Result.objects.filter(completion_date__year=year, completion_date__month=month)
+            results = Result.objects.filter(
+                completion_date__year=year, completion_date__month=month)
             email_for = [user.email]
             email_from = 'studenttesting@example.com'
-            theme = "Отчёт по количеству пройденных тестов за {0}.{1}".format(month, year)
+            theme = "Отчёт по количеству пройденных тестов за {0}.{1}".format(
+                month, year)
             temp_dict = dict()
             message_data = ''
             for record in results:
@@ -249,20 +270,22 @@ def teacheraction(task, request, *args):
                     key.name,
                     len(value),
                     endword(len(value)),
-                     ", ".join([item.full_name for item in value]))
+                    ", ".join([item.full_name for item in value]))
             for test in Test.objects.all():
                 if not test in temp_dict.keys():
-                    message_data += "Тест '{0}' в этом месяце никто не проходил.\n".format(test.name)
+                    message_data += "Тест '{0}' в этом месяце никто не проходил.\n".format(
+                        test.name)
 
             try:
                 send_mail(f'{theme} от {email_from}', message_data,
-                      email_from, email_for)
+                          email_from, email_for)
             except BadHeaderError:
                 message_status = 'Сообщение не отправлено'
             message_status = 'Сообщение отправлено'
         return menu, user, current_date, message_status
     elif task == '':
         return menu, user
+
 
 def index(request):
     if 'user_type' in request.session and request.session['user']:
@@ -282,7 +305,7 @@ def index(request):
         # проверка корректности пароля
         if request.POST['password'] == '':
             error_password = 'Введите пароль'
-        elif len(request.POST['password']) <= 3  :
+        elif len(request.POST['password']) <= 3:
             error_password = 'Недостаточно символов пароля'
         # вывод на экран информации об ошибках при вводе email или пароля
         if error_email != '' or error_password != '':
@@ -291,7 +314,7 @@ def index(request):
                 'error_password': error_password,
                 'email': request.POST['email'],
                 'password': request.POST['password']
-                })
+            })
         # проверка введённых данных на наличие в базе данных
         if request.POST['email'] and request.POST['password']:
             user = False
@@ -319,15 +342,16 @@ def index(request):
                         'error_password': error_password,
                         'email': request.POST['email'],
                         'password': request.POST['password']
-                        })
+                    })
             return HttpResponse("==>%s<br />==>%s" % (request.POST['email'], request.POST['password']))
     # загрузка формы
-    test_data = {'student': ['ivanovsr@mail.ru', '111111'], 'teacher':['repinanv@google.com', '444444']}
-    
-    return render(request, 'studenttesting/auth.html', {'request': request, 'email': test_data['teacher'][0], 'password': test_data['teacher'][1]})
-    return render(request, 'studenttesting/auth.html', {'request': request, 'email': test_data['student'][0], 'password': test_data['student'][1]})
+    test_data = {'student': ['ivanovsr@mail.ru', '111111'],
+                 'teacher': ['repinanv@google.com', '444444']}
+    return render(request, 'studenttesting/auth.html')
+
 
 def getmenu(request):
+    # формирование меню для разных типов пользователей
     menu = list()
     user_types = {'student': 2, 'teacher': 3}
     unsorted_menu = list()
@@ -341,10 +365,12 @@ def getmenu(request):
         menu.append(Menu.objects.filter(position=unsorted_menu[position])[0])
     return menu
 
+
 def student(request):
     # страница студента
     if request.session['user_type'] == 'student':
-        menu, user, current_avatar, phone, phone_error = studentaction('mainpage', request)
+        menu, user, current_avatar, phone, phone_error = studentaction(
+            'mainpage', request)
         return render(request, 'studenttesting/mainpage.html', {
             'menu': menu,
             'full_name': user.full_name,
@@ -353,9 +379,10 @@ def student(request):
             'avatar': current_avatar,
             'phone': phone,
             'phone_error': phone_error,
-            })
+        })
     else:
         return HttpResponseRedirect(reverse("studenttesting:index"))
+
 
 def teacher(request):
     # страница преподавателя
@@ -366,9 +393,10 @@ def teacher(request):
             'full_name': user.full_name,
             'user_type': request.session['user_type'],
             'email': user.email,
-            })
+        })
     else:
         return HttpResponseRedirect(reverse("studenttesting:index"))
+
 
 def tests(request):
     # список тестов
@@ -382,11 +410,12 @@ def tests(request):
                 'user_type': request.session['user_type'],
                 'tests': tests,
                 'results': test_results,
-                })
+            })
         # интерфейс для преподавателя
         elif request.session['user_type'] == 'teacher':
             pass
     return HttpResponseRedirect(reverse("studenttesting:index"))
+
 
 def history(request):
     # история тестов
@@ -399,33 +428,36 @@ def history(request):
                 'full_name': user.full_name,
                 'user_type': request.session['user_type'],
                 'results': results_dict,
-                })
+            })
         # интерфейс для преподавателя
         elif request.session['user_type'] == 'teacher':
             pass
     return HttpResponseRedirect(reverse("studenttesting:index"))
+
 
 def feedback(request):
     # обратная связь с преподавателем
     if 'user_type' in request.session and request.session['user']:
         # интерфейс для студента
         if request.session['user_type'] == 'student':
-            menu, user, teachers, message_status = studentaction("feedback", request)
+            menu, user, teachers, message_status = studentaction(
+                "feedback", request)
             return render(request, 'studenttesting/feedback.html', {
                 'menu': menu,
                 'full_name': user.full_name,
                 'user_type': request.session['user_type'],
                 'teachers': teachers,
                 'message_status': message_status,
-                })
-
+            })
 
         # интерфейс для преподавателя
         elif request.session['user_type'] == 'teacher':
             pass
     return HttpResponseRedirect(reverse("studenttesting:index"))
 
-def getTestDict(IDtest, sort = None):
+
+def getTestDict(IDtest, sort=None):
+    # формирование перечня вопросов и ответов к тесту
     test_dict = dict()
     if sort:
         questions = Question.objects.filter(test_id=IDtest).order_by(sort)
@@ -435,12 +467,14 @@ def getTestDict(IDtest, sort = None):
         test_dict[q] = [a for a in Answer.objects.filter(question=q.id)]
     return test_dict
 
+
 def test(request, IDtest):
-    # формирование данных теста
+    # формирование страницы теста
     if 'user_type' in request.session and request.session['user']:
         # интерфейс для студента
         if request.session['user_type'] == 'student':
-            menu, user, test, questions_count, test_dict = studentaction("test", request, IDtest)
+            menu, user, test, questions_count, test_dict = studentaction(
+                "test", request, IDtest)
 
             return render(request, 'studenttesting/test.html', {
                 'menu': menu,
@@ -450,18 +484,20 @@ def test(request, IDtest):
                 'questions_count': questions_count,
                 'test_dict': test_dict,
                 'path': request.path,
-                })
+            })
         # интерфейс для преподавателя
         elif request.session['user_type'] == 'teacher':
             pass
     return HttpResponseRedirect(reverse("studenttesting:index"))
+
 
 def results(request, IDtest):
     # результаты теста
     if 'user_type' in request.session and request.session['user']:
         # интерфейс для студента
         if request.session['user_type'] == 'student':
-            menu, user, test, positive, negative, raiting, test_dict, questions_count, results_dict = studentaction("results", request, IDtest)
+            menu, user, test, positive, negative, raiting, test_dict, questions_count, results_dict = studentaction(
+                "results", request, IDtest)
             return render(request, 'studenttesting/results.html', {
                 'menu': menu,
                 'full_name': user.full_name,
@@ -473,16 +509,18 @@ def results(request, IDtest):
                 'test_dict': test_dict,
                 'questions_count': questions_count,
                 'results_dict': results_dict,
-                })
+            })
         # интерфейс для преподавателя
         elif request.session['user_type'] == 'teacher':
             pass
     return HttpResponseRedirect(reverse("studenttesting:index"))
 
+
 def reports(request):
     # страница преподавателя
     if request.session['user_type'] == 'teacher':
-        menu, user, current_date, message_status = teacheraction('reports', request)
+        menu, user, current_date, message_status = teacheraction(
+            'reports', request)
         return render(request, 'studenttesting/reports.html', {
             'menu': menu,
             'full_name': user.full_name,
@@ -490,9 +528,10 @@ def reports(request):
             'email': user.email,
             'current_date': current_date,
             'message_status': message_status,
-            })
+        })
     else:
         return HttpResponseRedirect(reverse("studenttesting:index"))
+
 
 def students(request):
     # страница преподавателя
@@ -504,9 +543,10 @@ def students(request):
             'user_type': request.session['user_type'],
             'email': user.email,
             'results': results_dict,
-            })
+        })
     else:
         return HttpResponseRedirect(reverse("studenttesting:index"))
+
 
 def detail(request, IDs):
     # страница преподавателя
@@ -517,13 +557,13 @@ def detail(request, IDs):
             'full_name': user.full_name,
             'user_type': request.session['user_type'],
             'email': user.email,
-            })
+        })
     else:
         return HttpResponseRedirect(reverse("studenttesting:index"))
 
+
 def logout(request):
+    # сброс учётной информации из сессии
     request.session['user_type'] = None
     request.session['user'] = None
     return HttpResponseRedirect(reverse("studenttesting:index"))
-
-

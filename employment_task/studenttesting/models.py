@@ -42,7 +42,8 @@ class Question(models.Model):
 
 class Answer(models.Model):
     test = models.ForeignKey(Test, on_delete=models.CASCADE)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, default=999)
+    question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, default=999)
     text = models.CharField(max_length=500)
     correct = models.BooleanField(default=False)
 
@@ -59,7 +60,8 @@ class Result(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
-    completion_date = models.DateTimeField('Дата прохождения', default=timezone.now)
+    completion_date = models.DateTimeField(
+        'Дата прохождения', default=timezone.now)
 
     def __str__(self):
         if self.answer.correct:
@@ -67,8 +69,6 @@ class Result(models.Model):
         else:
             answer_result = 'Неверно'
         return self.question.text + ": " + self.answer.text + " - " + answer_result
-
-
 
 
 class Menu(models.Model):
