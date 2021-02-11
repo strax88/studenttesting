@@ -8,7 +8,7 @@ import time
 
 
 @background(schedule=3)
-def notify_administrator(timer=3):
+def notify_administrator(timer=24*60*60):
     current_date = timezone.localtime(timezone.now()).strftime("%Y-%m-%d")
     year = current_date.split("-")[0]
     month = current_date.split("-")[1]
@@ -45,7 +45,7 @@ def notify_administrator(timer=3):
                   email_from, email_for)
     except BadHeaderError as e:
         print(e)
-    print("Следующая отправка: %s" % (timezone.localtime(
+    print("\nСледующая отправка: %s\n" % (timezone.localtime(
         timezone.now())+datetime.timedelta(seconds=timer)))
     time.sleep(timer)
 
