@@ -8,7 +8,7 @@ import time
 
 
 @background(schedule=3)
-def notify_administrator(timer=24*60*60):
+def notify_administrator(timer=3):
     current_date = timezone.localtime(timezone.now()).strftime("%Y-%m-%d")
     year = current_date.split("-")[0]
     month = current_date.split("-")[1]
