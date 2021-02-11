@@ -1,0 +1,42 @@
+{% extends 'studenttesting/base.html' %}
+{% block title %}
+	{% if user_type == 'student' %}
+		Страница студента - {{ full_name }}
+	{% else %}
+		Страница преподавателя - {{ full_name }}
+	{% endif %}
+{% endblock %}
+{% load static %}
+{% block content %}
+<p>
+	<div class="menu">
+		{% for elem in menu %}
+			{% if forloop.last %}
+				<a href="{{ elem.url }}">{{ elem.name }}</a>
+			{% else %}
+				<a href="{{ elem.url }}">{{ elem.name }}</a> | 
+			{% endif %}
+		{% endfor %}
+	</div>
+</p>
+<!-- common content -->
+<h1>{{ full_name }}</h1>
+<h2>{{ email }}</h2>
+<hr>
+<!-- END common content -->
+{% if user_type == 'student' %}
+	<!-- student content -->
+	<form method="POST" enctype="multipart/form-data">
+		{% csrf_token %}
+		<input type="file" size="50" name="avatar" placeholder="images" /><img src="{{ avatar }}" width="50" height="50" /> <br />
+		<input type="text" size="50" name="phone" placeholder="+7 XXX XXX XX XX" value="{{ phone }}" /><label><font color="red">{{ error_phone }}</font></label><br />
+		<input type="submit" value="Сохранить" />
+	</form>
+	<!-- END student content -->
+{% else %}
+	<!-- teacher content -->
+	
+	<!-- END teacher content -->
+{% endif %}
+{{ text }}
+{% endblock %}

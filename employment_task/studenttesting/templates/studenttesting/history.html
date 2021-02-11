@@ -1,0 +1,41 @@
+{% extends 'studenttesting/base.html' %}
+
+{% block title %} История {% endblock %}
+
+{% load static %}
+
+
+{% block content %}
+<p>
+	<div class="menu">
+		{% for elem in menu %}
+			{% if forloop.last %}
+				<a href="{{ elem.url }}">{{ elem.name }}</a>
+			{% else %}
+				<a href="{{ elem.url }}">{{ elem.name }}</a> | 
+			{% endif %}
+		{% endfor %}
+	</div>
+</p>
+<h1>История</h1>
+<h2>Студент: {{ full_name }}</h2>
+<hr />
+<table border="1">
+	<tr>
+		<th><center>Тест</center></th>
+		<th><center>Дата прохождения</center></th>
+		<th><center>Правильных ответов</center></th>
+		<th><center>Неправильных ответов</center></th>
+		<th><center>Оценка</center></th>
+	</tr>
+	{% for test, data in results.items %}
+	<tr>
+		<td>{{ test.name }}</td>
+		<td align="center">{{ data.date }}</td>
+		<td align="center">{{ data.positive }}</td>
+		<td align="center">{{ data.negative }}</td>
+		<td align="center">{{ data.raiting }}</td>
+	</tr>
+	{% endfor %}
+</table>
+{% endblock %}

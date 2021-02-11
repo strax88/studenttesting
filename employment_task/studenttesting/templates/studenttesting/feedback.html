@@ -1,0 +1,42 @@
+{% extends 'studenttesting/base.html' %}
+
+{% block title %} Обратная связь {% endblock %}
+
+{% load static %}
+
+
+{% block content %}
+<p>
+	<div class="menu">
+		{% for elem in menu %}
+			{% if forloop.last %}
+				<a href="{{ elem.url }}">{{ elem.name }}</a>
+			{% else %}
+				<a href="{{ elem.url }}">{{ elem.name }}</a> | 
+			{% endif %}
+		{% endfor %}
+	</div>
+</p>
+<h1>Обратная связь</h1>
+<h2>Студент: {{ full_name }}</h2>
+<hr />
+<p>
+	<font color="red" size='1'>Поля, отмеченные * обязательны для заполнения</font>
+</p>
+<form method="POST">
+	{% csrf_token %}
+	<select name="teacher" required size="1">
+		{% for elem in teachers %}
+			<option value="{{ elem.email }}">{{ elem.full_name }}</option>
+		{% endfor %}
+	</select><font color="red">*</font><br />
+	<input type="text" size=50 required name="theme" placeholder="Укажите тему" /><font color="red">*</font><br />
+	<textarea name='data' cols=50 rows="6" required placeholder="Описание"></textarea><font color="red">*</font><br />
+	<input type="submit" name="send" value="Отправить" />&nbsp;
+	{% if message_status == 'Сообщение отправлено' %}
+		<font color="green">{{ message_status }}</font>
+	{% else %}
+		<font color="red">{{ message_status }}</font>
+	{% endif %}
+</form>
+{% endblock %}

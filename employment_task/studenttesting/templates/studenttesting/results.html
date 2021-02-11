@@ -1,0 +1,73 @@
+{% extends 'studenttesting/base.html' %}
+
+{% block title %}Тест: {{ test.name }} | Результаты{% endblock %}
+
+{% load static %}
+
+
+{% block content %}
+<p>
+	<div class="menu">
+		{% for elem in menu %}
+			{% if forloop.last %}
+				<a href="../../{{ elem.url }}">{{ elem.name }}</a>
+			{% else %}
+				<a href="../../{{ elem.url }}">{{ elem.name }}</a> | 
+			{% endif %}
+		{% endfor %}
+	</div>
+</p>
+<h1>Тест: {{ test.name }} | Результаты</h1>
+	<h2>Студент: {{ full_name }}</h2>
+<table border="0">
+	<tr>
+		<td>Правильных</td>
+		<td>Неправильных</td>
+		<td>Баллы</td>
+	</tr>	
+	<tr>
+		<td>{{ positive }}</td>
+		<td>{{ negative }}</td>
+		<td>{{ raiting }}</td>
+	</tr>
+</table>
+
+<hr>
+<ul>
+	{% for question, answer in test_dict.items %}
+	<li>
+		{% for c in questions_count %}
+					{% if c.0 == question.id %}
+						{{ c.1 }}.
+					{% endif %}
+				{% endfor %}
+		{{ question.text }}
+		{% for k, v in results_dict.items %}
+			{% if k == question.id %}
+			{% if v.0 == 0 %}
+				(<b><font color="red">{{ v.1 }}</font></b>)
+			{% endif %}
+			{% endif %}
+		{% endfor %}
+
+	</li>
+	<ul>
+	{% for item in answer %}
+		<li>{{ item.text }}
+		{% for k, v in results_dict.items %}
+			{% if v.0 == item.id %}
+				{% if v.1 == 'Ответ верный' %}
+					>><b><font color="green">{{ v.1 }}</font></b><<
+				{% else %}
+					>><b><font color="red">{{ v.1 }}</font></b><<
+				{% endif %}
+			{% endif %}
+		{% endfor %}	
+
+
+		</li>
+	{% endfor %}
+	</ul>
+	{% endfor %}
+</ul>
+{% endblock %}
