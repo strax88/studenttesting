@@ -1,0 +1,13 @@
+{% extends 'studenttesting/base.html' %}
+
+{% block title %}Завершение работы{% endblock %}
+
+{% load static %}
+
+{% block content %}
+
+<h1>До свидания</h1>
+<label>Спасибо, что воспользовались нашей системой тестирования!</label><br />
+<a href="{% url 'studenttesting:accounts/login' %}">На страницу авторизации</a>
+
+{% endblock %}

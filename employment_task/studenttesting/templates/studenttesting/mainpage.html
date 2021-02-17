@@ -1,9 +1,9 @@
 {% extends 'studenttesting/base.html' %}
 {% block title %}
-	{% if user_type == 'student' %}
-		Страница студента - {{ full_name }}
+	{% if user.user_type.id == 3 %}
+		Страница студента - {{ user.full_name }}
 	{% else %}
-		Страница преподавателя - {{ full_name }}
+		Страница преподавателя - {{ user.full_name }}
 	{% endif %}
 {% endblock %}
 {% load static %}
@@ -22,16 +22,16 @@
 </p>
 <!-- END menu -->
 <!-- common content -->
-<h1>{{ full_name }}</h1>
-<h2>{{ email }}</h2>
+<h1>{{ user.full_name }}</h1>
+<h2>{{ user.email }}</h2>
 <hr>
 <!-- END common content -->
-{% if user_type == 'student' %}
+{% if user.user_type.id == 3 %}
 	<!-- student content -->
 	<form method="POST" enctype="multipart/form-data">
 		{% csrf_token %}
 		<input type="file" size="50" name="avatar" placeholder="images" /><img src="{{ avatar }}" width="50" height="50" /> <br />
-		<input type="text" size="50" name="phone" placeholder="+7 XXX XXX XX XX" value="{{ phone }}" /><label><font color="red">{{ error_phone }}</font></label><br />
+		<input type="text" size="50" name="phone" placeholder="+7 XXX XXX XX XX" value="{{ user.phone }}" /><label><font color="red">{{ phone_error }}</font></label><br />
 		<input type="submit" value="Сохранить" />
 	</form>
 	<!-- END student content -->
@@ -40,5 +40,4 @@
 	
 	<!-- END teacher content -->
 {% endif %}
-{{ text }}
 {% endblock %}

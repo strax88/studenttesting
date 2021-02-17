@@ -1,5 +1,6 @@
 # -*- cofing: utf-8 -*-
-from .models import Result, Test
+from .models import Test
+# from .models import Result, Test
 from background_task import background
 from django.core.mail import send_mail, BadHeaderError
 from django.utils import timezone

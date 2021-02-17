@@ -87,14 +87,24 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3'
+    },
+    'postgres': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'testing_db',
+        'USER': 'admin',
+        'PASSWORD': '12685',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
-
+DATABASES['default'] = DATABASES['postgres']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
+AUTH_USER_MODEL = 'studenttesting.CustomUser'
+LOGIN_REDIRECT_URL = 'studenttesting:index'
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',

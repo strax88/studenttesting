@@ -2,11 +2,14 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.conf import settings
-from .models import Student, Teacher, Menu, Test, Question, Answer, Result
+from .models import Menu, Test, Question, Answer, CustomUser
+# from .models import Student, Teacher, Menu, Test, Question, Answer, Result, CustomUser
 from django.core.files.storage import FileSystemStorage
 from django.template.context_processors import media, static
 from django.core.mail import send_mail, BadHeaderError
 from django.utils import timezone
+from django.views.generic.base import View, TemplateView
+from django.contrib.auth.views import LoginView, LogoutView
 from .script import notify_administrator, endword
 import os
 
@@ -287,79 +290,169 @@ def teacheraction(task, request, *args):
         return menu, user
 
 
-def index(request):
-    if 'user_type' in request.session and request.session['user']:
-        return HttpResponseRedirect(reverse("studenttesting:{0}".format(request.session['user_type'])))
-    request.session['base_path'] = request.get_full_path()
-    error_email = ''
-    error_password = ''
-    # проверка при отправке данных формы
-    if request.POST:
-        # проверка корректности email
-        if request.POST['email'] == '':
-            error_email = 'Введите email'
-        elif not "@" in request.POST['email'] or not "." in request.POST['email']:
-            error_email = 'Введите корректный email'
-        elif len(request.POST['email'].split('@')[0]) <= 3 or len(request.POST['email'].split('@')[1]) <= 5 or len(request.POST['email'].split('.')[-1]) <= 1:
-            error_email = 'недостаточно символов email'
-        # проверка корректности пароля
-        if request.POST['password'] == '':
-            error_password = 'Введите пароль'
-        elif len(request.POST['password']) <= 3:
-            error_password = 'Недостаточно символов пароля'
-        # вывод на экран информации об ошибках при вводе email или пароля
-        if error_email != '' or error_password != '':
-            return render(request, 'studenttesting/auth.html', {
-                'error_email': error_email,
-                'error_password': error_password,
-                'email': request.POST['email'],
-                'password': request.POST['password']
+class MainPage(TemplateView):
+    template_name = 'studenttesting/mainpage.html'
+    def dispatch(self, request, *args, **kwargs):
+        self.user = request.user
+        menu = getmenu(request)
+        avatar = self.getavatar(request)
+        phone_error = self.getphone(request)
+        if self.user.is_authenticated:
+            print(phone_error)
+            return self.getauthcontent(request, menu, avatar, phone_error)
+        # return HttpResponseRedirect(reverse("studenttesting:accounts/login"))
+
+    def getauthcontent(self, request, menu, avatar, phone_error):
+        return render(request, 'studenttesting/mainpage.html', {
+            'user': self.user,
+            'menu': menu,
+            'avatar': avatar,
+            'phone_error': phone_error,
             })
-        # проверка введённых данных на наличие в базе данных
-        if request.POST['email'] and request.POST['password']:
-            user = False
-            user_flag = 1
-            if len(Student.objects.filter(email=request.POST['email'])) > 0:
-                user = Student.objects.filter(email=request.POST['email'])[0]
-                user_flag = 2
-            if len(Teacher.objects.filter(email=request.POST['email'])) > 0:
-                user = Teacher.objects.filter(email=request.POST['email'])[0]
-                user_flag = 3
-            if user:
-                # проверка корректности пароля
-                if user.password == request.POST['password']:
-                    if user_flag == 2:
-                        request.session['user_type'] = 'student'
-                        request.session['user'] = user.id
-                        return HttpResponseRedirect(reverse("studenttesting:student"))
-                    elif user_flag == 3:
-                        request.session['user_type'] = 'teacher'
-                        request.session['user'] = user.id
-                        return HttpResponseRedirect(reverse("studenttesting:teacher"))
-                else:
-                    error_password = 'Пароль не подходит'
-                    return render(request, 'studenttesting/auth.html', {
-                        'error_password': error_password,
-                        'email': request.POST['email'],
-                        'password': request.POST['password']
-                    })
-            return HttpResponse("==>%s<br />==>%s" % (request.POST['email'], request.POST['password']))
-    # загрузка формы
-    test_data = {'student': ['ivanovsr@mail.ru', '111111'],
-                 'teacher': ['repinanv@google.com', '444444']}
-    return render(request, 'studenttesting/auth.html')
+
+    def getavatar(self, request):
+        # назначение аватарки по умолчанию
+        current_avatar = settings.STATIC_URL + 'studenttesting/default_avatar.png'
+        if self.user.avatar and len(self.user.avatar) > 0:
+            current_avatar = self.user.avatar
+        # загрузка аватарки в медиа-каталог
+        if request.method == 'POST' and 'avatar' in request.FILES:
+            current_avatar = self.uploadavatar(request.FILES['avatar'])
+        # проверка на наличие файла аватарки, если отсутствует
+        # применяется аватарка по умолчанию
+        if not os.path.exists(str(settings.BASE_DIR) + current_avatar):
+            current_avatar = settings.STATIC_URL + 'studenttesting/default_avatar.png'
+        return current_avatar
+
+    def uploadavatar(self, avatar):
+        fs = FileSystemStorage()
+        filename = fs.save(
+            '.'.join(avatar.name.split('.')[:-1])
+            + "_student_" + str(self.user.id)
+            + "." + avatar.name.split('.')[-1],
+            avatar
+        )
+        uploaded_file_url = fs.url(filename)
+        uploaded_file = str(settings.BASE_DIR) + uploaded_file_url
+        self.user.avatar = uploaded_file_url
+        self.user.save()
+        return self.user.avatar
+
+    def getphone(self, request):
+        # назначение телефона по умолчанию
+        phone_error = ''
+        # изменение аватарки при наличии информации о файле в базе данных
+        # проверка ввода телефонного номера, не менее 5 символов
+        if request.method == 'POST' and request.POST['phone']:
+            phone_error = self.checkphone(request.POST['phone'])
+        phone = self.user.phone
+        if not phone:
+            self.savephone('')
+        else:
+            self.savephone(phone)
+        # формирование номера телефона для отображения в шаблоне
+        if not phone_error: phone_error = ''
+        return phone_error
+
+    def checkphone(self, phone):
+        if len(phone) < 5:
+            return 'Неверный формат номера'
+        else:
+            self.savephone(phone)
+
+    def savephone(self, phone):
+        self.user.phone = phone
+        self.user.save()
+
+
+
+class CustomLogoutView(LogoutView):
+    # next_page = settings.LOGIN_REDIRECT_URL
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return render(request, 'studenttesting/logged_out.html')
+
+# def index(request):
+#     print("====>", request.user.is_staff)
+#     if request.user.is_staff:
+#         return HttpResponseRedirect(reverse("studenttesting:teacher"))
+#     elif not request.user.is_staff:
+#         return HttpResponseRedirect(reverse("studenttesting:student"))
+
+    # if 'user_type' in request.session and request.session['user']:
+    #     return HttpResponseRedirect(reverse("studenttesting:{0}".format(request.session['user_type'])))
+    # request.session['base_path'] = request.get_full_path()
+    # error_email = ''
+    # error_password = ''
+    # # проверка при отправке данных формы
+    # if request.POST:
+    #     # проверка корректности email
+    #     if request.POST['email'] == '':
+    #         error_email = 'Введите email'
+    #     elif not "@" in request.POST['email'] or not "." in request.POST['email']:
+    #         error_email = 'Введите корректный email'
+    #     elif len(request.POST['email'].split('@')[0]) <= 3 or len(request.POST['email'].split('@')[1]) <= 5 or len(request.POST['email'].split('.')[-1]) <= 1:
+    #         error_email = 'недостаточно символов email'
+    #     # проверка корректности пароля
+    #     if request.POST['password'] == '':
+    #         error_password = 'Введите пароль'
+    #     elif len(request.POST['password']) <= 3:
+    #         error_password = 'Недостаточно символов пароля'
+    #     # вывод на экран информации об ошибках при вводе email или пароля
+    #     if error_email != '' or error_password != '':
+    #         return render(request, 'studenttesting/auth.html', {
+    #             'error_email': error_email,
+    #             'error_password': error_password,
+    #             'email': request.POST['email'],
+    #             'password': request.POST['password']
+    #         })
+    #     # проверка введённых данных на наличие в базе данных
+    #     if request.POST['email'] and request.POST['password']:
+    #         user = False
+    #         user_flag = 1
+    #         if len(Student.objects.filter(email=request.POST['email'])) > 0:
+    #             user = Student.objects.filter(email=request.POST['email'])[0]
+    #             user_flag = 2
+    #         if len(Teacher.objects.filter(email=request.POST['email'])) > 0:
+    #             user = Teacher.objects.filter(email=request.POST['email'])[0]
+    #             user_flag = 3
+    #         if user:
+    #             # проверка корректности пароля
+    #             if user.password == request.POST['password']:
+    #                 if user_flag == 2:
+    #                     request.session['user_type'] = 'student'
+    #                     request.session['user'] = user.id
+    #                     return HttpResponseRedirect(reverse("studenttesting:student"))
+    #                 elif user_flag == 3:
+    #                     request.session['user_type'] = 'teacher'
+    #                     request.session['user'] = user.id
+    #                     return HttpResponseRedirect(reverse("studenttesting:teacher"))
+    #             else:
+    #                 error_password = 'Пароль не подходит'
+    #                 return render(request, 'studenttesting/auth.html', {
+    #                     'error_password': error_password,
+    #                     'email': request.POST['email'],
+    #                     'password': request.POST['password']
+    #                 })
+    #         return HttpResponse("==>%s<br />==>%s" % (request.POST['email'], request.POST['password']))
+    # # загрузка формы
+    # test_data = {'student': ['ivanovsr@mail.ru', '111111'],
+    #              'teacher': ['repinanv@google.com', '444444']}
+    # return render(request, 'accounts/')
 
 
 def getmenu(request):
     # формирование меню для разных типов пользователей
     menu = list()
-    user_types = {'student': 2, 'teacher': 3}
     unsorted_menu = list()
     max_element = 0
+    if request.user.is_anonymous:
+        return HttpResponseRedirect(reverse('studenttesting:accounts/login'))
     for elem in Menu.objects.filter(role=1):
         unsorted_menu.append(elem.position)
-    for elem in Menu.objects.filter(role=user_types[request.session['user_type']]):
-        unsorted_menu.append(elem.position)
+    if request.user.user_type.id > 1:
+        for elem in Menu.objects.filter(role=request.user.user_type.id):
+            unsorted_menu.append(elem.position)
     unsorted_menu.sort()
     for position in range(len(unsorted_menu)):
         menu.append(Menu.objects.filter(position=unsorted_menu[position])[0])
