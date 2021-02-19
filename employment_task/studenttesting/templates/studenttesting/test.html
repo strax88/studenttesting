@@ -1,49 +1,26 @@
 {% extends 'studenttesting/base.html' %}
 
-{% block title %}Тест: {{ test.name }}{% endblock %}
+{% block title %}Тест: {{ data.test.name }}{% endblock %}
 
 {% load static %}
 
 
 {% block content %}
-<!-- menu -->
-<p>
-	<div class="menu">
-		{% for elem in menu %}
-			{% if forloop.last %}
-				<a href="../{{ elem.url }}">{{ elem.name }}</a>
-			{% else %}
-				<a href="../{{ elem.url }}">{{ elem.name }}</a> | 
-			{% endif %}
-		{% endfor %}
-	</div>
-</p>
-<!-- END menu -->
-<h1>Тест: {{ test.name }}</h1>
-<h2>Студент: {{ full_name }}</h2>
-<hr>
-<form method="POST">{% csrf_token %}<input type="submit" name="sort" value="Сортировать по алфавиту"></form>
-<form method="post" action="{% url 'studenttesting:test' test.id %}/results">
+
+<form method="post" action="{% url 'studenttesting:results' data.test.id %}" accept-charset="utf-8">
 	{% csrf_token %}
-	{% for question, answers in test_dict.items %}
-		<p>
-			<h4>
-				{% for c in questions_count %}
-					{% if c.0 == question.id %}
-						{{ c.1 }}.
-					{% endif %}
-				{% endfor %}
-				{{ question.text }}
-			</h4>
-			<label>
-				<font color="red">{{ answers.question.id }}</font>
-			</label>
-			{% for answer in answers %}
+	<h2>{{ data.test.name }}</h2>
+	<ol>
+		{% for question in data.questions %}
+		<li><h5>{{ question.text }}</h5></li>
+			{% for answer in data.answers %}
+				{% if answer.question.id == question.id %}
 				<input type="radio" name="question_{{ question.id }}" id="answer_{{ answer.id }}" value="answer_{{ answer.id }}" />
 				<label for="answer_{{ answer.id }}">&nbsp;{{ answer.text }}</label><br />
+				{% endif %}
 			{% endfor %}
-		</p>
-	{% endfor %}
+		{% endfor %}
+	</ol>
 	<input type="submit" value="Отправить результат">
 </form>
 {% endblock %}

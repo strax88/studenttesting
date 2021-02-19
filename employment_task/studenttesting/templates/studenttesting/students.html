@@ -5,24 +5,11 @@
 {% load static %}
 
 {% block content %}
-<!-- menu -->
-<p>
-	<div class="menu">
-		{% for elem in menu %}
-			{% if forloop.last %}
-				<a href="{{ elem.url }}">{{ elem.name }}</a>
-			{% else %}
-				<a href="{{ elem.url }}">{{ elem.name }}</a> | 
-			{% endif %}
-		{% endfor %}
-	</div>
-</p>
-<!-- END menu -->
 <h1>Список студентов</h1>
-<h2>Преподаватель: {{ full_name }}</h2>
+<h2>Преподаватель: {{ data.user.full_name }}</h2>
 <hr />
 
-<form method="POST">
+<form method="POST" action="{% url 'studenttesting:clear_result' %}">
 	{% csrf_token %}
 	<table border="0">
 		<tr>
@@ -34,27 +21,30 @@
 			<th><center>Оценка</center></th>
 			<th><center><input type="submit" value="Очистить результат"></center></th>
 		</tr>
-		{% for student, tests in results.items %}
+		{% for user, data in students_results.items %}
 			<tr>
-				{% if tests|length > 1 %}
-					<td rowspan='{{ tests|length|add:"1" }}'>{{ student.full_name }}</td>
+				{% if data.results|length > 1 %}
+					<td rowspan='{{ data.results|length|add:"1" }}'>{{ user.full_name }}</td>
 				{% else %}
-					<td rowspan='{{ tests|length|add:"1" }}'>{{ student.full_name }}</td>
-					{% if tests|length == 0 %}
+					<td rowspan='{{ data.results|length|add:"1" }}'>{{ user.full_name }}</td>
+					{% if data.results|length == 0 %}
 						<td colspan="5" align="center">Нет пройденных тестов</td>
 					{% endif %}
 				{% endif %}
 			</tr>
-			{% if tests|length != 0 %}
-				{% for test, data in tests.items %}
+			{% if data.results|length != 0 %}
+
+				{% for elem in data.results %}
 				<tr>
-					<td>{{ test.name }}</td>
-					<td align="center">{{ data.date }}</td>
-					<td align="center">{{ data.positive }}</td>
-					<td align="center">{{ data.negative }}</td>
-					<td align="center">{{ data.raiting }}</td>
-					<td align="center"> <input type="checkbox" name="student_{{ student.id }}" value="test_{{ test.id }}" /></td>
+				
+					<td>{{ elem.0.test.name }}</td>
+					<td align="center">{{ elem.0.completion_date }}</td>
+					{% for note in elem.1 %}
+					<td align="center">{{ note }}</td>
+					{% endfor %}
+					<td align="center"> <input type="checkbox" name="user_{{ user.id }}" value="test_{{ elem.0.test.id }}" /></td>
 				</tr>
+				
 				{% endfor %}
 			{% endif %}
 		{% endfor %}

@@ -68,7 +68,19 @@
     </div>
     {% endblock %}
     {% endif %}
-
+    <!-- menu -->
+    <p>
+      <div class="menu">
+        {% for elem in data.menu %}
+          {% if forloop.last %}
+            <a href="../{{ elem.url }}">{{ elem.name }}</a>
+          {% else %}
+            <a href="../{{ elem.url }}">{{ elem.name }}</a> | 
+          {% endif %}
+        {% endfor %}
+      </div>
+    </p>
+    <!-- END menu -->
     <div class="main shifted" id="main">
       {% if not is_popup and is_nav_sidebar_enabled %}
         {% block nav-sidebar %}
@@ -76,6 +88,7 @@
         {% endblock %}
       {% endif %}
       <div class="content">
+        
         {% block messages %}
           {% if messages %}
             <ul class="messagelist">{% for message in messages %}

@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django import forms
 from studenttesting.models import CustomUser, UserType
 # from studenttesting.models import Student, Teacher, Test, Question, Answer, Result, Menu#, CustomUser
-from studenttesting.models import Test, Question, Answer, Menu#, CustomUser
+from studenttesting.models import Test, Question, Answer, Menu, Result
 from .forms import CustomUserChangeForm, CustomUserCreationForm
+from django import forms
 # Register your models here.
 
 class CustomUserAdmin(UserAdmin):
@@ -57,16 +57,16 @@ class QuestionAdmin(admin.ModelAdmin):
     list_display = ('text',)
 
 
-# class ResultForm(forms.ModelForm):
+class ResultForm(forms.ModelForm):
 
-#     class Meta:
-#         model = Answer
-#         exclude = ['correct', model.question]
+    class Meta:
+        model = Answer
+        exclude = ['correct', model.question]
 
 
-# class ResultsAdmin(admin.ModelAdmin):
-#     exclude = ['test', 'question', 'text']
-#     form = ResultForm
+class ResultsAdmin(admin.ModelAdmin):
+    exclude = ['test', 'question', 'text']
+    form = ResultForm
 
 
 # admin.site.register(Student)
@@ -74,5 +74,5 @@ class QuestionAdmin(admin.ModelAdmin):
 admin.site.register(Test, TestAdmin)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Answer)
-# admin.site.register(Result, ResultsAdmin)
+admin.site.register(Result, ResultsAdmin)
 admin.site.register(Menu)

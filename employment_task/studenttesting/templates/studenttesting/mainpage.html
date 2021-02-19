@@ -8,30 +8,18 @@
 {% endblock %}
 {% load static %}
 {% block content %}
-<!-- menu -->
-<p>
-	<div class="menu">
-		{% for elem in menu %}
-			{% if forloop.last %}
-				<a href="{{ elem.url }}">{{ elem.name }}</a>
-			{% else %}
-				<a href="{{ elem.url }}">{{ elem.name }}</a> | 
-			{% endif %}
-		{% endfor %}
-	</div>
-</p>
-<!-- END menu -->
 <!-- common content -->
-<h1>{{ user.full_name }}</h1>
-<h2>{{ user.email }}</h2>
+<h1>{{ data.user.full_name }}</h1>
+<h2>{{ data.user.email }}</h2>
 <hr>
 <!-- END common content -->
-{% if user.user_type.id == 3 %}
+{% if data.user.user_type.id == 3 %}
 	<!-- student content -->
 	<form method="POST" enctype="multipart/form-data">
 		{% csrf_token %}
-		<input type="file" size="50" name="avatar" placeholder="images" /><img src="{{ avatar }}" width="50" height="50" /> <br />
-		<input type="text" size="50" name="phone" placeholder="+7 XXX XXX XX XX" value="{{ user.phone }}" /><label><font color="red">{{ phone_error }}</font></label><br />
+		<img src="{{ data.avatar }}" width="50" height="50" /> <br />
+		{{ form.as_p }}
+		<label><font color="red">{{ data.phone_error }}</font></label><br />
 		<input type="submit" value="Сохранить" />
 	</form>
 	<!-- END student content -->

@@ -121,23 +121,23 @@ class Answer(models.Model):
             answer_result = 'Верно'
         else:
             answer_result = 'Неверно'
-        return self.question.text + ": " + self.text + " - " + answer_result
+        return self.text + " - " + answer_result
 
 
-# class Result(models.Model):
-#     test = models.ForeignKey(Test, on_delete=models.CASCADE)
-#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-#     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-#     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
-#     completion_date = models.DateTimeField(
-#         'Дата прохождения', default=timezone.now)
+class Result(models.Model):
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+    completion_date = models.DateTimeField(
+        'Дата прохождения', default=timezone.now)
 
-#     def __str__(self):
-#         if self.answer.correct:
-#             answer_result = 'Верно'
-#         else:
-#             answer_result = 'Неверно'
-#         # return self.question.text + ": " + self.answer.text + " - " + answer_result
+    def __str__(self):
+        if self.answer.correct:
+            answer_result = 'Верно'
+        else:
+            answer_result = 'Неверно'
+        return self.question.text + ": " + self.answer.text + " - " + answer_result
 
 
 class Menu(models.Model):
