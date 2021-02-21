@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django import forms
-from .models import CustomUser
+from django.utils import timezone
+from .models import CustomUser, Result
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -52,4 +53,14 @@ class MainPageForm(forms.ModelForm):
         widgets = {
             'avatar': forms.ClearableFileInput(),
             'phone': forms.TextInput(attrs={'placeholder':'+7-XXX-XXX-XX-XX'})
+        }
+
+class ReportForm(forms.ModelForm):
+
+    class Meta:
+        model = Result
+        fields = ['completion_date']
+
+        widgets = {
+            'completion_date': forms.DateTimeInput(attrs={'type':"month"})
         }

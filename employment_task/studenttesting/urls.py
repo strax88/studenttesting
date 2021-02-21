@@ -20,6 +20,7 @@ urlpatterns = [
     # path('reports', views.reports, name='reports'),
     path('students', views.StudentsView.as_view(), name='students'),
     path('clear_result', views.ClearResultView.as_view(), name='clear_result'),
+    path('reports', views.ReportsView.as_view(), name='reports'),
     # path('students/<int:IDs>', views.detail, name='detail'),
 
     # path('logout', views.logout, name='logout'),

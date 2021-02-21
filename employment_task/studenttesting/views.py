@@ -11,13 +11,17 @@ from django.views.generic.base import View, TemplateView
 from django.views import generic
 from django.contrib.auth.views import LoginView, LogoutView
 from .script import notify_administrator, endword
-from .forms import FeedbackForm, MainPageForm
+from .forms import FeedbackForm, MainPageForm, ReportForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.decorators import login_required
 import os
 
 # Create your views here.
-
 def getmenu(request):
     # формирование меню для разных типов пользователей
+    print(request.user.user_type)
     menu = list()
     unsorted_menu = list()
     max_element = 0
@@ -25,14 +29,15 @@ def getmenu(request):
         return HttpResponseRedirect(reverse('studenttesting:accounts/login'))
     for elem in Menu.objects.filter(role=1):
         unsorted_menu.append(elem.position)
-    if request.user.user_type.id > 1:
+    if isinstance(request.user.user_type, type(None)):
+        pass
+    elif request.user.user_type.id > 1:
         for elem in Menu.objects.filter(role=request.user.user_type.id):
             unsorted_menu.append(elem.position)
     unsorted_menu.sort()
     for position in range(len(unsorted_menu)):
         menu.append(Menu.objects.filter(position=unsorted_menu[position])[0])
     return menu
-
 
 
 class CommonObject(object):
@@ -50,12 +55,19 @@ class CommonObject(object):
     phone_error = ''
 
 
-class MainPage(generic.FormView):
+class MainPage(UserPassesTestMixin, generic.FormView):
+    login_url = 'accounts/login'
+    redirect_field_name = 'redirect_to'
     model = CustomUser
     form_class = MainPageForm
     template_name = 'studenttesting/mainpage.html'
     success_url = reverse_lazy("studenttesting:index")
     data = CommonObject()
+
+    def test_func(self):
+        if self.request.user.is_anonymous:
+            return False
+        return True
 
     def setup(self, request, *args, **kwargs):
         self.user = request.user
@@ -147,21 +159,22 @@ class MainPage(generic.FormView):
 
 class CustomLogoutView(LogoutView):
     def get(self, request, *args, **kwargs):
-        logout(request)
         return render(request, 'studenttesting/logged_out.html')
 
 
-class TestsView(generic.ListView):
+class TestsView(UserPassesTestMixin, generic.ListView):
+    login_url = 'accounts/login'
+    logout_url = 'accounts/logout_url.html'
+    redirect_field_name = 'redirect_to'
     model = Test
     context_object_name = 'list_of_tests'
     data = CommonObject()
 
     def setup(self, request, *args, **kwargs):
-        self.user = CustomUser.objects.get(pk=request.user.id)
-        self.completed_tests = set(i.test.id for i in Result.objects.filter(user=request.user))
         self.request = request
 
     def get_context_data(self, *, object_list=None, **kwargs):
+        self.completed_tests = set(i.test.id for i in Result.objects.filter(user=self.request.user))
         context = super().get_context_data(**kwargs)
         self.data.result = list()
         self.data.menu = getmenu(self.request)
@@ -170,10 +183,10 @@ class TestsView(generic.ListView):
         context['data'] = self.data
         return context
 
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.user_type.id == 2:
-            return HttpResponseRedirect(reverse("studenttesting:index"))
-        return super().dispatch(request, args, kwargs)
+    def test_func(self):
+        if self.request.user.is_anonymous or isinstance(self.request.user.user_type, type(None)) or self.request.user.user_type.id == 2:
+            return False
+        return True
 
     def checktest(self, request, test):
         if test.id in self.completed_tests:
@@ -182,7 +195,7 @@ class TestsView(generic.ListView):
             return [test, 'Не пройдено']
 
 
-class HistoryView(generic.TemplateView):
+class HistoryView(UserPassesTestMixin, generic.TemplateView):
     template_name = "studenttesting/history.html"
     data = CommonObject()
 
@@ -197,6 +210,11 @@ class HistoryView(generic.TemplateView):
         self.data.user = self.request.user
         context['data'] = self.data
         return context
+
+    def test_func(self):
+        if self.request.user.is_anonymous or isinstance(self.request.user.user_type, type(None)) or self.request.user.user_type.id == 2:
+            return False
+        return True
 
 
 class UserResults:
@@ -228,7 +246,7 @@ class UserResults:
         return [positive, negative, score]
 
 
-class StudentsView(generic.TemplateView):
+class StudentsView(UserPassesTestMixin, generic.TemplateView):
     template_name = "studenttesting/students.html"
     data = CommonObject()
 
@@ -247,14 +265,111 @@ class StudentsView(generic.TemplateView):
         context['data'] = self.data
         return context
 
+    def test_func(self):
+        if self.request.user.is_anonymous or isinstance(self.request.user.user_type, type(None)) or self.request.user.user_type.id == 3:
+            return False
+        return True
 
-class ClearResultView(generic.FormView):
+
+class ReportsView(UserPassesTestMixin, generic.FormView):
+    template_name = "studenttesting/reports.html"
+    data = CommonObject()
+    model = Result
+    form_class = ReportForm
+
+    def setup(self, request, *args, **kwargs):
+        self.request = request
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        students_results = dict()
+        form = ReportForm({'completion_date':timezone.localtime(timezone.now()).strftime("%Y-%m-%d")})
+        if form.is_valid():
+            form.data['completion_date'] = timezone.localtime(timezone.now()).strftime("%Y-%m")
+        self.data.menu = getmenu(self.request)
+        self.data.user = self.request.user
+        for user in CustomUser.objects.filter(user_type=3):
+            results =  UserResults(self.request, user)
+            students_results[user] = results.getdata()
+        context['students_results'] = students_results
+        context['data'] = self.data
+        context['form'] = form
+        return context
+
+    def test_func(self):
+        if self.request.user.is_anonymous or isinstance(self.request.user.user_type, type(None)) or self.request.user.user_type.id == 3:
+            return False
+        return True
+
+    def post(self, request):
+        self.sendemail(request)
+        return super().post(request)
+
+    def getreportdata(self, request):
+        date = request.POST['completion_date']
+
+        report_data = dict()
+        year = date.split("-")[0]
+        month = date.split("-")[1]
+        results = Result.objects.filter(
+            completion_date__year=year, completion_date__month=month)
+        report_data['email_for'] = [request.user.email]
+        report_data['email_from'] = 'studenttesting@example.com'
+        report_data['theme'] = "Отчёт по количеству пройденных тестов за {0}.{1}".format(
+            month, year)
+        temp_dict = dict()
+        message_data = ''
+        for record in results:
+            temp_dict[record.test] = set()
+        for record in results:
+            temp_dict[record.test].add(record.user)
+        for key, value in temp_dict.items():
+            users_list = ", ".join([item.full_name for item in value])
+            values = (key.name, date, len(value), endword(len(value)), users_list)
+            message_data += "Тест '{0}' {1} пройден {2} раз{3}.\nСписок студентов: {users_list}.\n".format(users_list=users_list, *values)
+        for test in Test.objects.all():
+            message_data = self.checktest(test, temp_dict, message_data, date)
+        report_data['message_data'] = message_data
+        return report_data
+
+    def checktest(self, test, temp_dict, message_data, date):
+        if not test in temp_dict.keys():
+            message_data += "Тест '{0}' {1} никто не проходил.\n".format(test.name, date)
+        return message_data
+
+    def sendemail(self, request):
+        report_data = self.getreportdata(request)
+        email_for = report_data['email_for']
+        email_from = report_data['email_from']
+        theme = report_data['theme']
+        message_data = report_data['message_data']
+        email_attr = (
+            f'{theme} от {email_from}',
+            message_data,
+            email_from,
+            email_for
+        )
+        try:
+            send_mail(*email_attr)
+        except BadHeaderError:
+            self.data.message_status = 'Не отправлено'
+
+
+class ClearResultView(UserPassesTestMixin, generic.FormView):
 
     def post(self, request):
         dict_data = dict(request.POST)
         clear_data = self.clearpostdata(dict_data)
         self.clear(clear_data)
         return HttpResponseRedirect(reverse("studenttesting:students"))
+
+    def get(self, request):
+        return HttpResponseRedirect(reverse("studenttesting:students"))
+
+    def test_func(self):
+        if self.request.user.is_anonymous or isinstance(self.request.user.user_type, type(None)) or self.request.user.user_type.id == 3:
+            return False
+        return True
 
     def clear(self, clear_data):
         for user, tests in clear_data.items():
@@ -279,7 +394,7 @@ class ClearResultView(generic.FormView):
         return int(test.split('_')[-1])
 
 
-class FeedbackView(generic.FormView):
+class FeedbackView(UserPassesTestMixin, generic.FormView):
     template_name = "studenttesting/feedback.html"
     form_class = FeedbackForm
     forms = FeedbackForm()
@@ -288,6 +403,11 @@ class FeedbackView(generic.FormView):
 
     def setup(self, request, *args, **kwargs):
         self.request = request
+
+    def test_func(self):
+        if self.request.user.is_anonymous or isinstance(self.request.user.user_type, type(None)) or self.request.user.user_type.id == 2:
+            return False
+        return True
 
     def form_valid(self, form):
         return super().form_valid(form)
@@ -320,7 +440,7 @@ class FeedbackView(generic.FormView):
             self.data.message_status = 'Не отправлено'
 
 
-class TestView(generic.DetailView):
+class TestView(UserPassesTestMixin, generic.DetailView):
     model = Answer
     template_name = "studenttesting/test.html"
     context_object_name = 'list_of_result'
@@ -330,6 +450,11 @@ class TestView(generic.DetailView):
         self.kwargs = kwargs
         self.pk = kwargs['pk']
         self.request = request
+
+    def test_func(self):
+        if self.request.user.is_anonymous or isinstance(self.request.user.user_type, type(None)) or self.request.user.user_type.id == 2:
+            return False
+        return True
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -345,7 +470,7 @@ class TestView(generic.DetailView):
         return super().get(request, *args, **kwargs)
 
 
-class ResultView(generic.DetailView):
+class ResultView(UserPassesTestMixin, generic.DetailView):
     model = Answer
     template_name = "studenttesting/results.html"
     context_object_name = 'list_of_result'
@@ -381,6 +506,11 @@ class ResultView(generic.DetailView):
         if "POST" in request.method:
             form_answer = self.getformanswer(request)
             self.addresult(form_answer)
+
+    def test_func(self):
+        if self.request.user.is_anonymous or isinstance(self.request.user.user_type, type(None)) or self.request.user.user_type.id == 2:
+            return False
+        return True
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -434,8 +564,8 @@ class ResultView(generic.DetailView):
 
 
 
-def logout(request):
-    # сброс учётной информации из сессии
-    request.session['user_type'] = None
-    request.session['user'] = None
-    return HttpResponseRedirect(reverse("studenttesting:index"))
+# def logout(request):
+#     # сброс учётной информации из сессии
+#     request.session['user_type'] = None
+#     request.session['user'] = None
+#     return HttpResponseRedirect(reverse("studenttesting:index"))

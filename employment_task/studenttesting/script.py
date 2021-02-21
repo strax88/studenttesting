@@ -29,7 +29,7 @@ def notify_administrator(timer=24*60*60):
     for record in results:
         temp_dict[record.test] = set()
     for record in results:
-        temp_dict[record.test].add(record.student)
+        temp_dict[record.test].add(record.user)
     for key, value in temp_dict.items():
         message_data += "Тест '{0}' пройден {1} раз{2}.\
         Список студентов: {3}.\n".format(

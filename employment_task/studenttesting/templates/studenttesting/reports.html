@@ -8,12 +8,13 @@
 {% block content %}
 
 <h1>Отчёты</h1>
-<h2>Преподаватель: {{ full_name }}</h2>
+<h2>Преподаватель: {{ data.user.full_name }}</h2>
 <hr />
 
 <form method="POST">
 	{% csrf_token %}
-	<h3>Отчёт за месяц: </h3><input type="month" name="calendar" value="{{ current_date }}">
+	{{ form }}
+	<!-- <h3>Отчёт за месяц: </h3><input type="month" name="calendar" value="{{ current_date }}"> -->
 	<input type="submit" name="send">&nbsp; {{ message_status }}
 </form>
 
