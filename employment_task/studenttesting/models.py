@@ -31,7 +31,7 @@ class UserType(models.Model):
     type_name = models.CharField("Тип пользователя", max_length=50)
 
     def __str__(self):
-        return self.type_name
+        return self.type_nam
     
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
