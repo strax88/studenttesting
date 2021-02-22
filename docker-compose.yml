@@ -18,11 +18,7 @@ services:
       - POSTGRES_PASSWORD=12685
       - POSTGRES_DB=testing_db
   notify:
-<<<<<<< HEAD
     image: strax88/studenttesting_web
-=======
-    image: studenttesting_web
->>>>>>> a8c9f2727e2df06ec62b513887cd6f190c5ed983
     command: python3 manage.py process_tasks
     depends_on:
       - web
