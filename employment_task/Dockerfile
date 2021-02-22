@@ -1,8 +1,7 @@
-FROM ubuntu:18.04
-ADD ./backup_21.02.2021 /home/web
+FROM python:3.8.5
 RUN apt-get update
-RUN apt-get install gcc g++ nano mc postgresql python3-pip libpq-dev git -y
-RUN mkdir /home/web
-WORKDIR /home/web
-RUN git clone https://github.com/strax88/studenttesting.git
-WORKDIR /home/web/studenttesting/
+RUN apt-get install apt-utils nano mc python3-pip libpq-dev systemd git -y
+ADD . /home/studenttesting
+WORKDIR /home/studenttesting/employment_task
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt

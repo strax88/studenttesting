@@ -1,0 +1,26 @@
+{% extends 'studenttesting/base.html' %}
+
+{% block title %}Тест: {{ data.test.name }}{% endblock %}
+
+{% load static %}
+
+
+{% block content %}
+
+<form method="post" action="{% url 'studenttesting:results' data.test.id %}" accept-charset="utf-8">
+	{% csrf_token %}
+	<h2>{{ data.test.name }}</h2>
+	<ol>
+		{% for question in data.questions %}
+		<li><h5>{{ question.text }}</h5></li>
+			{% for answer in data.answers %}
+				{% if answer.question.id == question.id %}
+				<input type="radio" name="question_{{ question.id }}" id="answer_{{ answer.id }}" value="answer_{{ answer.id }}" />
+				<label for="answer_{{ answer.id }}">&nbsp;{{ answer.text }}</label><br />
+				{% endif %}
+			{% endfor %}
+		{% endfor %}
+	</ol>
+	<input type="submit" value="Отправить результат">
+</form>
+{% endblock %}

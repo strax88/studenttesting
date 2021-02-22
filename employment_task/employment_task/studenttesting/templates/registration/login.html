@@ -1,0 +1,18 @@
+{% extends 'studenttesting/base.html' %}
+
+{% block title %}Авторизация{% endblock %}
+
+{% load static %}
+
+{% block content %}
+
+<h1>Добро пожаловать в систему проверки знаний</h1>
+<label><font color="red">{{ user_exist }}</font></label>
+
+<form method="POST">
+	{% csrf_token %}
+	{{ form.as_p }}
+	<input type="submit" value="Войти">
+</form>
+
+{% endblock %}

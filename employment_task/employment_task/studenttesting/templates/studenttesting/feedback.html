@@ -1,0 +1,38 @@
+{% extends 'studenttesting/base.html' %}
+
+{% block title %} Обратная связь {% endblock %}
+
+{% load static %}
+
+{% block content %}
+
+<h1>Обратная связь</h1>
+<h2>Студент: {{ full_name }}</h2>
+<hr />
+<form method="POST">
+	{% csrf_token %}
+
+	{{ form.as_p }}
+
+	<hr>
+	<hr>
+	<hr>
+	<!-- <select name="teacher" required size="1">
+		{% for elem in teachers %}
+			<option value="{{ elem.email }}">{{ elem.full_name }}</option>
+		{% endfor %}
+	</select>
+	<font color="red">*</font><br />
+	<input type="text" size=50 required name="theme" placeholder="Укажите тему" />
+	<font color="red">*</font><br />
+	<textarea name='data' cols=50 rows="6" required placeholder="Описание"></textarea>
+	<font color="red">*</font><br /> -->
+	<input type="submit" name="send" value="Отправить" />&nbsp;
+	{% if data.message_status == 'Сообщение отправлено' %}
+		<font color="green">{{ data.message_status }}</font>
+	{% else %}
+		<font color="red">{{ data.message_status }}</font>
+	{% endif %}
+</form>
+
+{% endblock %}

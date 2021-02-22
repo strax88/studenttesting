@@ -1,13 +1,26 @@
 version: "3.7"
+
 services:
-  server:
-    build: employment_task/
-    command: python manage.py runserver 0.0.0.0:8000
+  web:
+    build: ./django_app
+    command: python3 manage.py runserver 0.0.0.0:9000
     ports:
-      - 8000:8000
+      - 9000:9000
     volumes:
-      - ./:/app
+      - ./app/:/home/web/studenttesting/employment_task
+    depends_on:
+      - db
   notify:
     build: 
-      context: ./employment_task/
-    command: python manage.py process_tasks
+      context: ./django_app/
+    command: python3 manage.py process_tasks
+  db:
+    image: postgres:latest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=12685
+      - POSTGRES_DB=testing_db
+volumes:
+  postgres_data:
