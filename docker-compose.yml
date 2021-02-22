@@ -10,10 +10,6 @@ services:
       - ./app/:/home/web/studenttesting/employment_task
     depends_on:
       - db
-  notify:
-    build: 
-      context: ./employment_task/
-    command: python3 manage.py process_tasks
   db:
     image: postgres:latest
     volumes:
@@ -22,5 +18,10 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=12685
       - POSTGRES_DB=testing_db
+  notify:
+    image: studenttesting_web
+    command: python3 manage.py process_tasks
+    depends_on:
+      - web
 volumes:
   postgres_data:
