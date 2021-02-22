@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   web:
-    build: ./django_app
+    build: ./employment_task
     command: python3 manage.py runserver 0.0.0.0:9000
     ports:
       - 9000:9000
@@ -12,7 +12,7 @@ services:
       - db
   notify:
     build: 
-      context: ./django_app/
+      context: ./employment_task/
     command: python3 manage.py process_tasks
   db:
     image: postgres:latest
