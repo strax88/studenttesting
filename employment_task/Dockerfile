@@ -5,3 +5,4 @@ ADD . /home/studenttesting
 WORKDIR /home/studenttesting/employment_task
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+RUN python3 manage.py loaddata studenttesting/fixtures/initial_data.json
