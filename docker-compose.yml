@@ -1,12 +1,11 @@
 version: "3.7"
 services:
   web:
-    image: strax88/studenttesting_web
-    command: python3 manage.py runserver 0.0.0.0:9000
+    build: ./employment_task
+    command: bash -c "python3 manage.py loaddata ./studenttesting/fixtures/initial_data.json" # закоментировать после первого запуска docker-compose up
+    # command: bash -c "python3 manage.py runserver 0.0.0.0:9000" # раскоментировать после первого запуска docker-compose up
     ports:
       - 9000:9000
-    volumes:
-      - ./app/:/home/web/studenttesting/employment_task
     depends_on:
       - db
   db:
@@ -18,8 +17,8 @@ services:
       - POSTGRES_PASSWORD=12685
       - POSTGRES_DB=testing_db
   notify:
-    image: strax88/studenttesting_web
-    command: python3 manage.py process_tasks
+    image: ./employment_task
+    # command: bash -c "python3 manage.py process_tasks # раскоментировать после первого запуска docker-compose up
     depends_on:
       - web
 volumes:
